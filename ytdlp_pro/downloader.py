@@ -251,6 +251,6 @@ def download_media(
         logger.error("Download failed: %s", exc)
         return DownloadResult(success=False, error=str(exc), warnings=warnings)
 
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception("Unexpected error during download.")
         return DownloadResult(success=False, error=str(exc), warnings=warnings)
