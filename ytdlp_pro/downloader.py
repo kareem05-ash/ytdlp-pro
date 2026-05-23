@@ -173,7 +173,9 @@ def download_media(
         "noplaylist": not playlist,
 
         # ── Resilience ───────────────────────────────────────────────────────
-        "ignoreerrors": True,          # skip broken playlist items
+        # ignoreerrors=True skips broken *playlist* items without aborting,
+        # but also swallows single-video errors — only enable for playlists.
+        "ignoreerrors": playlist,
         "retries": 10,
         "fragment_retries": 10,
         "concurrent_fragment_downloads": 4,
@@ -243,6 +245,12 @@ def download_media(
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
+
+        # For single videos, any hook-reported error means nothing was saved.
+        if not playlist and warnings:
+            error_msg = warnings[-1]
+            logger.error("Download failed: %s", error_msg)
+            return DownloadResult(success=False, error=error_msg, warnings=warnings)
 
         logger.info("Download completed successfully.")
         return DownloadResult(success=True, output_path=output_path, warnings=warnings)
