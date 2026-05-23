@@ -121,6 +121,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Embed video thumbnail into the output file",
     )
     parser.add_argument(
+        "--cover",
+        action="store_true",
+        help=(
+            "Mux thumbnail + audio into an MP4 with a static image background "
+            "(like Snaptube). Implies --audio-only. Requires FFmpeg."
+        ),
+    )
+    parser.add_argument(
         "-v", "--verbose",
         action="store_true",
         help="Enable debug-level logging",
@@ -151,6 +159,7 @@ def main(argv: list[str] | None = None) -> int:
         rate_limit=args.rate_limit,
         cookies=args.cookies,
         embed_thumbnail=args.embed_thumbnail,
+        cover=args.cover,
     )
 
     if result.warnings:

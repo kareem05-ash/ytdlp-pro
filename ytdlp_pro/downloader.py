@@ -119,6 +119,7 @@ def download_media(
     rate_limit: str | None = None,
     cookies: str | None = None,
     embed_thumbnail: bool = False,
+    cover: bool = False,
 ) -> DownloadResult:
     """
     Download video or audio from YouTube (and other yt-dlp supported sites).
@@ -149,6 +150,10 @@ def download_media(
         Path to a Netscape-format ``cookies.txt`` file (age-restricted content).
     embed_thumbnail:
         Embed the video thumbnail into the output file.
+    cover:
+        Mux the thumbnail + audio into an MP4 with a static image background,
+        exactly like Snaptube's audio-with-cover feature.  Implies
+        ``audio_only=True``.  Requires FFmpeg.
 
     Returns
     -------
@@ -157,6 +162,10 @@ def download_media(
         on failure.
     """
     warnings: list[str] = []
+
+    # --cover implies audio-only
+    if cover:
+        audio_only = True
 
     # Validate quality choice
     if quality not in QUALITY_MAP:
@@ -209,7 +218,7 @@ def download_media(
                 "writesubtitles": True,
                 "writeautomaticsub": True,
                 "subtitleslangs": langs,
-                # Convert vtt → srt so FFmpeg can embed them
+                # Convert vtt -> srt so FFmpeg can embed them
                 "postprocessors": [
                     {"key": "FFmpegSubtitlesConvertor", "format": "srt"},
                     {"key": "FFmpegEmbedSubtitle", "already_have_subtitle": False},
@@ -243,12 +252,36 @@ def download_media(
         if embed_thumbnail:
             ydl_opts["postprocessors"].append({"key": "EmbedThumbnail"})
 
+    # Cover mode: download thumbnail + audio, mux into MP4 with static image
+    if cover:
+        ydl_opts["writethumbnail"] = True
+        ydl_opts["postprocessors"] = [
+            # Step 1 - extract audio as MP3
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "320",
+            },
+            # Step 2 - convert thumbnail to jpg (ensures FFmpeg compatibility)
+            {
+                "key": "FFmpegThumbnailsConvertor",
+                "format": "jpg",
+            },
+            # Step 3 - mux static image + audio -> MP4
+            {
+                "key": "FFmpegVideoConvertor",
+                "preferedformat": "mp4",
+            },
+        ]
+
     # ── Run ──────────────────────────────────────────────────────────────────
     logger.info("=" * 70)
     logger.info("URL        : %s", url)
     logger.info("Output     : %s", output_path.resolve())
     logger.info("Quality    : %s", "audio-only (MP3 320k)" if audio_only else quality)
     logger.info("Playlist   : %s", playlist)
+    if cover:
+        logger.info("Cover      : yes (static thumbnail + audio -> MP4)")
     if subtitles:
         logger.info("Subtitles  : %s", subtitle_langs or ["en"])
     if rate_limit:
