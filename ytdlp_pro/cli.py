@@ -92,7 +92,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--subtitles",
         action="store_true",
-        help="Download subtitles alongside the video",
+        help="Embed subtitles into the MP4 (soft subtitles, selectable in any player)",
     )
     parser.add_argument(
         "--sub-langs",

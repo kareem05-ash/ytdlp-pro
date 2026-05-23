@@ -131,7 +131,8 @@ def download_media(
     quality:
         One of ``"best"``, ``"1080p"``, ``"720p"``, ``"480p"``, ``"360p"``.
     subtitles:
-        Write subtitle files alongside the video.
+        Embed subtitle tracks into the output MP4 (soft subtitles —
+        selectable in any player, no re-encoding required).
     subtitle_langs:
         List of BCP-47 language codes, e.g. ``["en", "ar"]``.
         Defaults to ``["en"]`` when *subtitles* is ``True``.
@@ -201,6 +202,11 @@ def download_media(
                 "writesubtitles": True,
                 "writeautomaticsub": True,
                 "subtitleslangs": langs,
+                # Convert vtt → srt so FFmpeg can embed them
+                "postprocessors": [
+                    {"key": "FFmpegSubtitlesConvertor", "format": "srt"},
+                    {"key": "FFmpegEmbedSubtitle", "already_have_subtitle": False},
+                ],
             }
         )
 
