@@ -85,13 +85,20 @@ def _make_progress_hook(warnings: list[str]):
             percent = d.get("_percent_str", "").strip()
             speed   = d.get("_speed_str",   "N/A")
             eta     = d.get("_eta_str",     "N/A")
-            logger.info("Downloading: %s | Speed: %s | ETA: %s", percent, speed, eta)
+            # \r rewrites the same line; end="" suppresses the newline
+            print(
+                f"\r  Downloading: {percent:<6} | Speed: {speed:<12} | ETA: {eta:<8}",
+                end="",
+                flush=True,
+            )
         elif status == "finished":
+            print()  # newline after the progress line
             logger.info("Post-processing: %s", d.get("filename", ""))
         elif status == "error":
+            print()  # newline after the progress line
             msg = d.get("error", "Unknown error during download")
             warnings.append(str(msg))
-            logger.warning("Hook reported error: %s", msg)
+            logger.warning("Download error: %s", msg)
 
     return hook
 
