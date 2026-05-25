@@ -2,7 +2,7 @@
 
 > **A professional, batteries-included YouTube downloader built on [yt-dlp](https://github.com/yt-dlp/yt-dlp).**
 
-[![CI](https://github.com/YOUR_USERNAME/ytdlp-pro/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/ytdlp-pro/actions/workflows/ci.yml)
+[![CI](https://github.com/kareem05-ash/ytdlp-pro/actions/workflows/ci.yml/badge.svg)](https://github.com/kareem05-ash/ytdlp-pro/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
@@ -83,7 +83,7 @@ Download a build from [ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 ### From source (recommended for development)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ytdlp-pro.git
+git clone https://github.com/kareem05-ash/ytdlp-pro.git
 cd ytdlp-pro
 pip install -e ".[dev]"
 ```
