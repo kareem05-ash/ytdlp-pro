@@ -31,6 +31,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0]
+
+### Fixed
+- `HTTP Error 403: Forbidden` on YouTube: depend on `yt-dlp[default]` (bundles
+  `yt-dlp-ejs`), detect JS runtimes (Deno/Node/Bun/QuickJS) and pass them to yt-dlp
+- Format selection no longer hard-requires `ext=mp4`/`m4a`; container preference is
+  now a soft `format_sort`, so downloads don't fail when a format disappears
+- Subtitle post-processors were silently dropped when audio mode was on
+- yt-dlp warnings are now surfaced through `logging` instead of being hidden
+
+### Added
+- Automatic retry of 403 errors with alternative YouTube player clients
+- `--cookies-from-browser`, `--update [--nightly]`, `--doctor`
+
 ## [Unreleased]
 
 _Nothing yet._

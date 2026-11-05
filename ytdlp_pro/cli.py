@@ -17,6 +17,16 @@ ytdlp-pro https://www.youtube.com/playlist?list=PL... --playlist --rate-limit 2M
 
 # Age-restricted video via cookies
 ytdlp-pro https://youtu.be/xxx --cookies ~/cookies.txt
+
+# Fix 403 errors: use your browser's login cookies
+ytdlp-pro https://youtu.be/xxx --cookies-from-browser chrome
+
+# Keep yt-dlp current (YouTube breaks old versions every few weeks)
+ytdlp-pro --update
+ytdlp-pro --update --nightly
+
+# Check that yt-dlp, JS runtime and FFmpeg are set up correctly
+ytdlp-pro --doctor
 """
 
 from __future__ import annotations
@@ -26,6 +36,7 @@ import logging
 import sys
 
 from ytdlp_pro.downloader import QUALITY_MAP, download_media
+from ytdlp_pro.maintenance import doctor, update_ytdlp
 
 # ---------------------------------------------------------------------------
 # Logging setup
@@ -53,7 +64,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     # ── Positional ────────────────────────────────────────────────────────
-    parser.add_argument("url", help="YouTube video or playlist URL")
+    parser.add_argument("url", nargs="?", help="YouTube video or playlist URL")
 
     # ── Output ────────────────────────────────────────────────────────────
     parser.add_argument(
@@ -109,6 +120,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Maximum download speed, e.g. 2M (2 MB/s) or 500K",
     )
     parser.add_argument(
+        "--cookies-from-browser",
+        metavar="BROWSER",
+        help="Read login cookies from a browser (chrome, firefox, edge, brave, ...). "
+             "Often fixes 403 errors.",
+    )
+    parser.add_argument(
         "--cookies",
         metavar="FILE",
         help="Path to Netscape cookies.txt for age-restricted or private content",
@@ -127,6 +144,22 @@ def _build_parser() -> argparse.ArgumentParser:
             "Mux thumbnail + audio into an MP4 with a static image background "
             "(like Snaptube). Implies --audio-only. Requires FFmpeg."
         ),
+    )
+    # ── Maintenance ───────────────────────────────────────────────────────
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        help="Upgrade yt-dlp to the latest release and exit",
+    )
+    parser.add_argument(
+        "--nightly",
+        action="store_true",
+        help="With --update: install the newest nightly (fixes YouTube breakage sooner)",
+    )
+    parser.add_argument(
+        "--doctor",
+        action="store_true",
+        help="Check yt-dlp, JavaScript runtime and FFmpeg, then exit",
     )
     parser.add_argument(
         "-v", "--verbose",
@@ -147,6 +180,13 @@ def main(argv: list[str] | None = None) -> int:
 
     _configure_logging(args.verbose)
 
+    if args.update:
+        return update_ytdlp(nightly=args.nightly)
+    if args.doctor:
+        return doctor()
+    if not args.url:
+        parser.error("the following arguments are required: url")
+
     result = download_media(
         url=args.url,
         output_dir=args.output_dir,
@@ -160,6 +200,7 @@ def main(argv: list[str] | None = None) -> int:
         cookies=args.cookies,
         embed_thumbnail=args.embed_thumbnail,
         cover=args.cover,
+        cookies_from_browser=args.cookies_from_browser,
     )
 
     if result.warnings:

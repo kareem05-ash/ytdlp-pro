@@ -175,6 +175,92 @@ class TestDownloadMedia:
         assert "ar" in opts.get("subtitleslangs", [])
 
 
+    def test_403_retries_with_other_clients_then_fails(self, tmp_path):
+        import yt_dlp
+
+        calls: list[dict] = []
+
+        def fake_ydl(opts):
+            calls.append(opts)
+            inst = self._make_mock_ydl()
+            inst.download.side_effect = yt_dlp.utils.DownloadError("HTTP Error 403: Forbidden")
+            return inst
+
+        with patch("yt_dlp.YoutubeDL", side_effect=fake_ydl):
+            result = download_media("https://youtu.be/x", output_dir=str(tmp_path))
+
+        assert len(calls) == 3
+        assert "player_client" in str(calls[1].get("extractor_args"))
+        assert result.success is False
+        assert "--update" in (result.error or "")
+
+    def test_non_403_error_is_not_retried(self, tmp_path):
+        import yt_dlp
+
+        calls: list[dict] = []
+
+        def fake_ydl(opts):
+            calls.append(opts)
+            inst = self._make_mock_ydl()
+            inst.download.side_effect = yt_dlp.utils.DownloadError("Video unavailable")
+            return inst
+
+        with patch("yt_dlp.YoutubeDL", side_effect=fake_ydl):
+            result = download_media("https://youtu.be/x", output_dir=str(tmp_path))
+
+        assert len(calls) == 1
+        assert result.success is False
+
+    def test_403_then_success_on_retry(self, tmp_path):
+        import yt_dlp
+
+        state = {"n": 0}
+
+        def fake_ydl(opts):
+            state["n"] += 1
+            inst = self._make_mock_ydl()
+            if state["n"] == 1:
+                inst.download.side_effect = yt_dlp.utils.DownloadError("HTTP Error 403")
+            else:
+                inst.download.return_value = 0
+            return inst
+
+        with patch("yt_dlp.YoutubeDL", side_effect=fake_ydl):
+            result = download_media("https://youtu.be/x", output_dir=str(tmp_path))
+
+        assert result.success is True
+
+    def test_cookies_from_browser_passed_through(self, tmp_path):
+        captured: list[dict] = []
+
+        def fake_ydl(opts):
+            captured.append(opts)
+            return self._make_mock_ydl()
+
+        with patch("yt_dlp.YoutubeDL", side_effect=fake_ydl):
+            download_media(
+                "https://youtu.be/x", output_dir=str(tmp_path), cookies_from_browser="Chrome"
+            )
+
+        assert captured[0]["cookiesfrombrowser"] == ("chrome",)
+
+    def test_format_has_no_hard_ext_filter(self):
+        assert all("ext=" not in v for v in QUALITY_MAP.values())
+
+    def test_subtitle_postprocessors_kept_in_video_mode(self, tmp_path):
+        captured: list[dict] = []
+
+        def fake_ydl(opts):
+            captured.append(opts)
+            return self._make_mock_ydl()
+
+        with patch("yt_dlp.YoutubeDL", side_effect=fake_ydl):
+            download_media("https://youtu.be/x", output_dir=str(tmp_path), subtitles=True)
+
+        keys = [p["key"] for p in captured[0]["postprocessors"]]
+        assert "FFmpegEmbedSubtitle" in keys
+
+
 # ---------------------------------------------------------------------------
 # DownloadResult
 # ---------------------------------------------------------------------------

@@ -13,4 +13,4 @@ Quick start
 from ytdlp_pro.downloader import DownloadResult, download_media
 
 __all__ = ["DownloadResult", "download_media"]
-__version__ = "1.0.0"
+__version__ = "1.1.0"

@@ -49,7 +49,8 @@
 | Dependency | Minimum version | Notes |
 |---|---|---|
 | Python | 3.10 | Uses `X \| Y` union syntax and `match` |
-| [yt-dlp](https://github.com/yt-dlp/yt-dlp) | 2024.1.0 | Installed automatically |
+| [yt-dlp](https://github.com/yt-dlp/yt-dlp) | 2025.11.12 | Installed automatically (`yt-dlp[default]`) - keep it updated |
+| JavaScript runtime (Deno recommended) | Any recent | Required by YouTube; `winget install DenoLand.Deno` on Windows |
 | [FFmpeg](https://ffmpeg.org/) | Any recent build | Required for merging formats and audio extraction |
 
 ### Installing FFmpeg
@@ -92,6 +93,19 @@ pip install -e ".[dev]"
 
 ```bash
 pip install ytdlp-pro
+```
+
+---
+
+## Troubleshooting `HTTP Error 403: Forbidden`
+
+YouTube changes its protections often. In order:
+
+```bash
+ytdlp-pro --update            # or: ytdlp-pro --update --nightly
+winget install DenoLand.Deno  # JS runtime, then restart the terminal
+ytdlp-pro --doctor            # verify setup
+ytdlp-pro URL --cookies-from-browser chrome
 ```
 
 ---
